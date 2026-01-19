@@ -1,0 +1,427 @@
+<!-- Chosen Palette: Vet Soft (Slate-50 Background, Slate-700 Text, Sky-500 & Green-500 Accents) -->
+<!-- Application Structure Plan: Interactive Project Guide.
+     Structure:
+     1. Header: Project Identity.
+     2. Navigation Bar: Tabs for Overview, Database (Code First), Backend (API), Frontend (Detailed UI).
+     3. Dynamic Content:
+        - Overview: Scenario and Tech Stack.
+        - Database: Entity Framework Core Code First instructions (Model, Context, Connection String).
+        - Backend: Controller requirements and CORS setup.
+        - Frontend: Step-by-step UI construction guide with visual mockups for Card, Modal, and Form.
+     -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PatiDost - Uygulama Rehberi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .tab-active {
+            border-bottom: 3px solid #0ea5e9;
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-inactive:hover {
+            color: #334155;
+            border-bottom: 3px solid #cbd5e1;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        pre { border-radius: 0.5rem; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🐾</span>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">PatiDost <span class="font-normal text-slate-500">| Veteriner Klinik Sistemi Uygulaması</span></h1>
+            </div>
+            <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                EF Core Code First • .NET 8 API • Bootstrap 5
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-8 border-b border-slate-200 mb-8 overflow-x-auto pb-1" id="navTabs">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-active py-4 px-1 transition-colors duration-200 whitespace-nowrap">Genel Bakış</button>
+            <button onclick="switchTab('database')" id="tab-database" class="tab-inactive py-4 px-1 transition-colors duration-200 whitespace-nowrap">Veritabanı (Code First)</button>
+            <button onclick="switchTab('backend')" id="tab-backend" class="tab-inactive py-4 px-1 transition-colors duration-200 whitespace-nowrap">Backend API</button>
+            <button onclick="switchTab('frontend')" id="tab-frontend" class="tab-inactive py-4 px-1 transition-colors duration-200 whitespace-nowrap">Frontend & UI</button>
+        </nav>
+
+        <!-- Dynamic View Container -->
+        <div id="content-area" class="animate-fade-in">
+            <!-- Content will be injected here by JS -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+            <p>&copy; 2026 PatiDost Proje Rehberi. Başarılar!</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA STORE ---
+        const projectData = {
+            overview: {
+                description: "Veteriner kliniği için dijital hasta takip sistemi. Bu projede amaç; veritabanını kod yazarak oluşturmak (Code First), API üzerinden veri alışverişi yapmak ve Bootstrap ile modern bir arayüz tasarlamaktır.",
+                steps: [
+                    { title: "1. Veritabanı Modeli", desc: "C# sınıflarını (Entity) ve DbContext yapısını kur." },
+                    { title: "2. API Controller", desc: "CRUD işlemlerini yapan API endpointlerini hazırla." },
+                    { title: "3. HTML İskeleti", desc: "Sayfa yapısını ve Bootstrap referanslarını ekle." },
+                    { title: "4. JS Entegrasyonu", desc: "Fetch API kullanarak verileri ekrana getir ve yönet." }
+                ]
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentTab = 'overview';
+
+        // --- CORE FUNCTIONS ---
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            const tabs = ['overview', 'database', 'backend', 'frontend'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabId) {
+                    btn.className = "tab-active py-4 px-1 transition-colors duration-200 whitespace-nowrap cursor-default";
+                } else {
+                    btn.className = "tab-inactive py-4 px-1 transition-colors duration-200 whitespace-nowrap cursor-pointer";
+                }
+            });
+
+            const container = document.getElementById('content-area');
+            container.innerHTML = ''; 
+            
+            switch(tabId) {
+                case 'overview': renderOverview(container); break;
+                case 'database': renderDatabase(container); break;
+                case 'backend': renderBackend(container); break;
+                case 'frontend': renderFrontend(container); break;
+            }
+            
+            // Re-highlight code blocks
+            hljs.highlightAll();
+        }
+
+        // --- RENDERERS ---
+
+        function renderOverview(container) {
+            let stepsHtml = projectData.overview.steps.map((step, index) => `
+                <div class="flex items-start p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 font-bold rounded-full mr-4">
+                        ${index + 1}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800">${step.title}</h3>
+                        <p class="text-sm text-slate-600 mt-1">${step.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="space-y-8 animate-fade-in">
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-r-lg">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Proje Özeti</h2>
+                        <p class="text-slate-700 text-lg leading-relaxed">${projectData.overview.description}</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Adım Adım Yol Haritası</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${stepsHtml}
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Teknolojiler</h3>
+                        <ul class="list-disc list-inside text-slate-600 space-y-1">
+                            <li><strong>Backend:</strong> .NET Core 8.0 Web API</li>
+                            <li><strong>ORM:</strong> Entity Framework Core (Code First)</li>
+                            <li><strong>Veritabanı:</strong> SQL Server (LocalDB veya MSSQL)</li>
+                            <li><strong>Frontend:</strong> HTML5, Bootstrap 5, JavaScript (Fetch API)</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDatabase(container) {
+            container.innerHTML = `
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Veritabanı: Code First Yaklaşımı</h2>
+                        <p class="text-slate-600">Veritabanını SQL Server Management Studio'da elle oluşturmak yerine, C# kodları yazarak oluşturacağız.</p>
+                    </div>
+
+                    <!-- Step 1: Entity -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700">1. Adım: Entity Sınıfını Oluşturun</div>
+                        <div class="p-4 space-y-2">
+                            <p class="text-sm text-slate-600 mb-2">Data klasörü altına Entities klasörü oluşturun ve <code>Patient.cs</code> adında bir sınıf açın.</p>
+                            <pre><code class="language-csharp">public class Patient
+{
+    public int Id { get; set; } // Primary Key
+    public string AnimalName { get; set; } // Örn: Pamuk
+    public string Species { get; set; } // Türü: Kedi, Köpek...
+    public string Breed { get; set; } // Cinsi: Tekir, Golden...
+    public string OwnerName { get; set; } // Sahibinin Adı
+    public string TreatmentDescription { get; set; } // Şikayet/Tedavi
+    public DateTime VisitDate { get; set; } // Geliş Tarihi
+    public bool IsVaccinated { get; set; } // Aşıları Tam mı?
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Context -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700">2. Adım: DbContext Sınıfı</div>
+                        <div class="p-4 space-y-2">
+                            <p class="text-sm text-slate-600 mb-2">Data klasörü altına <code>VeterinaryContext.cs</code> oluşturun.</p>
+                            <pre><code class="language-csharp">public class VeterinaryContext : DbContext
+{
+    public VeterinaryContext(DbContextOptions&lt;VeterinaryContext&gt; options) : base(options) 
+    { 
+    }
+
+    public DbSet&lt;Patient&gt; Patients { get; set; }
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Program.cs & Connection -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700">3. Adım: Bağlantı ve Oluşturma (EnsureCreated)</div>
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <p class="text-sm text-slate-600 mb-1"><code>appsettings.json</code> içine bağlantı cümlenizi ekleyin:</p>
+                                <pre><code class="language-json">"ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=VeterinaryDb;Trusted_Connection=True;TrustServerCertificate=True;"
+}</code></pre>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-600 mb-1"><code>Program.cs</code> içinde servisi kaydedin ve veritabanını oluşturun:</p>
+                                <pre><code class="language-csharp">// 1. Servisi ekle (Builder kısmında)
+builder.Services.AddDbContext&lt;VeterinaryContext&gt;(options => 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var app = builder.Build();
+
+// 2. Veritabanını oluştur (EnsureCreated)
+// Migration bilmediğimiz için bu yöntemi kullanıyoruz.
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService&lt;VeterinaryContext&gt;();
+    context.Database.EnsureCreated(); // Veritabanı yoksa oluşturur.
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBackend(container) {
+            container.innerHTML = `
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Backend API Mimarisi</h2>
+                        <p class="text-slate-600">Veritabanı hazır olduğuna göre, <code>Controllers</code> klasörüne <code>PatientsController</code> ekleyin.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Checklist -->
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-full">
+                            <h3 class="font-bold text-slate-800 mb-4 flex items-center">
+                                <span class="bg-blue-100 text-blue-600 p-1 rounded mr-2">📋</span>
+                                Yapılacaklar Listesi
+                            </h3>
+                            <ul class="space-y-3 text-sm text-slate-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Controller sınıfı <code>[Route("api/[controller]")]</code> ve <code>[ApiController]</code> attribute'larına sahip olmalı.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> Constructor Injection ile <code>VeterinaryContext</code> içeri alınmalı.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>[HttpGet]</strong> Metodu: Tüm listeyi (\`_context.Patients.ToList()\`) dönmeli.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>[HttpGet("{id}")]</strong> Metodu: ID'ye göre tek hasta bulmalı.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>[HttpPost]</strong> Metodu: Formdan gelen veriyi veritabanına ekleyip <code>SaveChanges()</code> yapmalı.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>[HttpPut]</strong> Metodu: Gelen ID'li kaydı bulup güncellemeli.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>[HttpDelete("{id}")]</strong> Metodu: Kaydı bulup silmeli.</li>
+                            </ul>
+                        </div>
+
+                        <!-- CORS Alert -->
+                        <div class="bg-red-50 border border-red-200 p-6 rounded-xl h-full">
+                            <h3 class="font-bold text-red-800 mb-2 flex items-center">
+                                <span class="text-2xl mr-2">⚠️</span> CORS Ayarı (Çok Önemli)
+                            </h3>
+                            <p class="text-sm text-red-700 mb-3">Frontend uygulamanız tarayıcıda çalışacağı için, API'nizin dışarıdan gelen isteklere izin vermesi gerekir. Bunu yapmazsanız Fetch istekleriniz hata verir.</p>
+                            <pre class="text-xs bg-white p-3 rounded border border-red-100 overflow-x-auto"><code class="language-csharp">builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll", builder => {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+// ...
+app.UseCors("AllowAll"); // app.UseAuthorization()'dan önce!</code></pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFrontend(container) {
+            container.innerHTML = `
+                <div class="space-y-12">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Frontend Rehberi: Ekran Ekran İlerleme</h2>
+                        <p class="text-slate-600">Tek bir <code>index.html</code> dosyası içinde çalışın. Bootstrap CSS ve JS dosyalarını CDN'den ekleyin. Aşağıdaki adımları sırasıyla uygulayın.</p>
+                    </div>
+
+                    <!-- Step 1: Navbar & Layout -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-blue-700 border-b pb-2">1. Ekran Düzeni (Layout)</h3>
+                        <p class="text-sm text-slate-600">Sayfanın en üstüne bir Navbar, altına da ana içerik kutusu (Container) koymalısınız. Başlık ve "Yeni Hasta Ekle" butonu burada olacak.</p>
+                        
+                        <!-- Visual Mockup -->
+                        <div class="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-sm">
+                            <div class="bg-slate-800 text-white p-3 flex justify-between items-center">
+                                <span class="font-bold">Veteriner Kliniği</span>
+                                <span class="text-xs text-slate-400">Ana Sayfa</span>
+                            </div>
+                            <div class="p-6 bg-slate-50">
+                                <div class="flex justify-between items-end mb-4 border-b pb-2">
+                                    <h1 class="text-2xl font-bold text-slate-700">Hasta Listesi</h1>
+                                    <button class="bg-green-600 text-white px-4 py-2 rounded text-sm shadow hover:bg-green-700 transition">
+                                        + Yeni Hasta
+                                    </button>
+                                </div>
+                                <div class="h-12 bg-slate-200 rounded border-2 border-dashed border-slate-400 flex items-center justify-center text-slate-500 text-sm">
+                                    Buraya Hastalar Kartlar Halinde Gelecek (Grid Sistemi)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-500 bg-slate-100 p-2 rounded">
+                            <strong>İpucu:</strong> "Yeni Hasta" butonu, kullanıcıyı sayfanın altındaki Ekleme Formuna kaydırabilir (\`href="#createForm"\`) veya bir Modal açabilir.
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Listing & Cards -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-blue-700 border-b pb-2">2. Hasta Listeleme (Cards)</h3>
+                        <p class="text-sm text-slate-600">Veritabanından gelen her hasta için bir "Bootstrap Card" oluşturmalısınız. Bu kartlar yan yana (Grid: <code>row</code> ve <code>col-md-3</code> vb.) dizilmeli.</p>
+                        
+                        <!-- Visual Mockup -->
+                        <div class="flex flex-wrap gap-4 justify-center bg-slate-50 p-6 border rounded-lg">
+                            <!-- Single Card Mockup -->
+                            <div class="bg-white rounded-lg shadow-md border border-slate-200 w-64 overflow-hidden relative">
+                                <div class="bg-blue-500 h-2 w-full"></div>
+                                <div class="p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="text-lg font-bold text-slate-800">Pamuk</h5>
+                                        <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-semibold">Kedi</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mb-3 space-y-1">
+                                        <p><strong>Cins:</strong> Tekir</p>
+                                        <p><strong>Sahip:</strong> Ahmet Yılmaz</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-4">
+                                        <button class="flex-1 bg-blue-500 text-white text-xs py-1.5 rounded hover:bg-blue-600 transition">Düzenle</button>
+                                        <button class="flex-1 bg-red-500 text-white text-xs py-1.5 rounded hover:bg-red-600 transition">Sil</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-indigo-50 p-3 rounded text-sm text-indigo-800 border border-indigo-200">
+                            <strong>JS Görevi:</strong> Sayfa yüklendiğinde (\`DOMContentLoaded\`) API'ye <code>GET /api/patients</code> isteği atın. Gelen JSON dizisini döngüye sokup (forEach) yukarıdaki HTML yapısını <code>innerHTML += ...</code> ile sayfaya ekleyin.
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Update Modal -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-blue-700 border-b pb-2">3. Güncelleme Ekranı (Modal)</h3>
+                        <p class="text-sm text-slate-600">Kart üzerindeki "Düzenle" butonuna basınca açılacak gizli bir Bootstrap Modal ekleyin. Sayfanın en altına HTML kodunu ekleyip <code>display: none</code> gibi davranmasını (Bootstrap sınıfıyla) sağlayın.</p>
+
+                        <!-- Visual Mockup -->
+                        <div class="fixed-mockup relative bg-slate-800/50 p-6 rounded-lg flex items-center justify-center">
+                            <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden">
+                                <div class="bg-slate-100 px-4 py-3 border-b flex justify-between items-center">
+                                    <h5 class="font-bold text-slate-700">Hasta Düzenle</h5>
+                                    <span class="text-slate-400 cursor-pointer">✕</span>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <input type="hidden" value="102" class="bg-slate-100 text-xs w-full p-1 mb-2 border" disabled placeholder="Hidden ID Input">
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-600 block mb-1">Hayvan Adı</label>
+                                        <input type="text" value="Pamuk" class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-600 block mb-1">Tedavi Açıklaması</label>
+                                        <textarea class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm" rows="2">Genel muayene yapıldı.</textarea>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50 px-4 py-3 flex justify-end gap-2 border-t">
+                                    <button class="bg-slate-300 text-slate-700 px-3 py-1.5 rounded text-sm">İptal</button>
+                                    <button class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm">Değişiklikleri Kaydet</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded text-sm text-amber-800 border border-amber-200">
+                            <strong>Önemli Mantık:</strong> 
+                            <ol class="list-decimal list-inside ml-2">
+                                <li>Düzenle butonuna tıklanınca ilgili hastanın ID'sini alın.</li>
+                                <li>API'den o hastanın detayını çekin (<code>GET /api/patients/5</code>).</li>
+                                <li>Gelen veriyi Modal içindeki inputlara doldurun.</li>
+                                <li>"Kaydet" butonuna basınca <code>PUT /api/patients</code> isteği atın.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Create Form -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-blue-700 border-b pb-2">4. Yeni Kayıt Formu</h3>
+                        <p class="text-sm text-slate-600">Bu kısım native form gönderimi (sayfa yenileyerek) yapmalı. Modal kullanmak yerine sayfanın en üstünde veya altında açık bir form olabilir.</p>
+                        <pre><code class="language-html">&lt;!-- Form Özelliklerine Dikkat --&gt;
+&lt;form action="https://localhost:7001/api/patients" method="POST"&gt;
+   &lt;!-- Inputlar buraya (name="AnimalName" vb.) --&gt;
+   &lt;button type="submit" class="btn btn-success"&gt;Kaydet&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('overview');
+        });
+
+    </script>
+</body>
+</html>
